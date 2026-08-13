@@ -10,8 +10,10 @@ export { auth as proxy } from "@/lib/auth";
 
 export const config = {
   matcher: [
-    // NextAuth's own /api/auth/* routes must stay public; everything else
-    // (all pages and all other API routes) requires a session per spec §7.
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|manifest.json|sw.js|icons/).*)",
+    // NextAuth's own /api/auth/* routes, and the PWA assets a browser/OS may
+    // fetch without a session (manifest, icons, service worker), must stay
+    // public. Everything else (all pages and all other API routes) requires
+    // a session per spec §7.
+    "/((?!api/auth|_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|icon$|apple-icon$|icons/).*)",
   ],
 };
