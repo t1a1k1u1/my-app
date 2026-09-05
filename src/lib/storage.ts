@@ -1,15 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { put } from "@vercel/blob";
 
-// spec §8/§9: production is meant to store icon images in a cloud object
-// store (Vercel Blob or S3-compatible), referenced by URL from
-// Ingredient.iconImageUrl. This local-filesystem implementation is the dev
-// fallback — it satisfies the same `saveIcon(file) -> url` contract, so
-// swapping in a real cloud-storage SDK later only means changing this file.
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "icons");
-const PUBLIC_PATH_PREFIX = "/uploads/icons";
-
+// spec §8/§9: icon images are stored in a cloud object store (Vercel Blob)
+// and referenced by URL from Ingredient.iconImageUrl. Requires
+// BLOB_READ_WRITE_TOKEN in the environment (see .env.example) — Vercel
+// injects it automatically for deployments with a Blob store attached; for
+// local dev, pull it from the dashboard or `vercel env pull`.
 const MAX_ICON_BYTES = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES: Record<string, string> = {
   "image/png": "png",
@@ -30,11 +26,13 @@ export async function saveIcon(file: File): Promise<string> {
   }
 
   const extension = ALLOWED_TYPES[file.type];
-  const filename = `${randomUUID()}.${extension}`;
+  const pathname = `icons/${randomUUID()}.${extension}`;
 
-  await mkdir(UPLOAD_DIR, { recursive: true });
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(UPLOAD_DIR, filename), buffer);
+  const blob = await put(pathname, file, {
+    access: "public",
+    contentType: file.type,
+    addRandomSuffix: false,
+  });
 
-  return `${PUBLIC_PATH_PREFIX}/${filename}`;
+  return blob.url;
 }

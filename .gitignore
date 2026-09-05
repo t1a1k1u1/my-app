@@ -46,6 +46,3 @@ next-env.d.ts
 # claude code local (machine-specific) settings
 .claude/settings.local.json
 
-# locally-stored icon uploads (dev fallback storage, see src/lib/storage.ts)
-/public/uploads/
-
